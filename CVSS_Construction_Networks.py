@@ -160,7 +160,7 @@ def getPathScore(allParticipants):
                     #path[i].reset()
                     #print(pathScore)
                 pathScore_list.append(round(pathScore,2))
-                output.append([path_list,round(pathScore,2),get_path_likelihood(path,total_edge_weight),get_path_score_category(round(pathScore,2)),get_path_likelihood_category(get_path_likelihood(path,total_edge_weight))])
+                output.append([path_list,round(pathScore,2),get_path_likelihood(path),get_path_score_category(round(pathScore,2)),get_path_likelihood_category(get_path_likelihood(path))])
                 index_max_score = pathScore_list.index(max(pathScore_list))
                 critical_path = output[index_max_score]
     return output, critical_path
@@ -246,7 +246,7 @@ G.add_edges_from([
     (APM,PE)
 ])
 """
-l1 = 1.0/35.0
+l1 = 1.0/35.0 # 35 = 1 + 4 + 30
 l2 = 4.0/35.0
 l3 = 30.0/35.0
 
@@ -259,24 +259,23 @@ G.add_edges_from([
     #(O,A,{'weight': 4.0}),(O,F,{'weight': 4.0})
 ])
     
-# to get all 
-all_edges = [e for e in G.edges]
-total_edge_weight = 0
-for each_edge in all_edges:
-    total_edge_weight = total_edge_weight + (G.get_edge_data(each_edge[0],each_edge[1])['weight'])
-print(total_edge_weight)
+# =============================================================================
+# all_edges = [e for e in G.edges]
+# total_edge_weight = 0
+# for each_edge in all_edges:
+#     total_edge_weight = total_edge_weight + (G.get_edge_data(each_edge[0],each_edge[1])['weight'])
+# print(total_edge_weight)
+# =============================================================================
 
-total_edge_weight = 1.0
+#total_edge_weight = 1.0
 
-def get_path_likelihood(path,total_edge_weight):
+def get_path_likelihood(path):
     current_path_weight = 1
     num_edges = len(path)-1
     for i in range(num_edges):
         #print(current_path_weight)
         current_path_weight = current_path_weight*(G.get_edge_data(path[i],path[i+1])['weight'])
-    curr_path_likelihood = current_path_weight/(total_edge_weight**num_edges)
-    return round(curr_path_likelihood,7)
-        
+    return round(current_path_weight,7)
 #print(get_path_likelihood([O,APM,PE],total_edge_weight))
         
 ##########################################################################
