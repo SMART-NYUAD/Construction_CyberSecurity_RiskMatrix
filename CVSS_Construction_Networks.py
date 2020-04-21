@@ -248,24 +248,28 @@ allParticipants_o = [O_o,A_o,APM_o,SI_o,PE_o,ME_o,F_o]
 TargetNode = O
 
 def get_path_score_cat(score):
-    if score >= 0.0 and score < 0.40:
+    if score >= 0.0 and score < 0.20:
+        return "Very Low"
+    elif score >= 0.20 and score < 0.40:
         return "Low"
-    elif score >= 0.40 and score < 0.70:
-        return "Medium"
-    elif score >= 0.70 and score < 0.90:
+    elif score >= 0.40 and score < 0.60:
+        return "Moderate"
+    elif score >=0.60 and score <= 0.80:
         return "High"
-    elif score >=0.90 and score <= 1.00:
-        return "Critical"
+    elif score >=0.80 and score <= 1.00:
+        return "Very High"
 
 def get_path_ll_cat(score):
-    if score >= 0.0 and score < 0.40:
-        return "Unlikely"
-    elif score >= 0.40 and score < 0.70:
-        return "Possible"
-    elif score >= 0.70 and score < 0.90:
-        return "Likely"
-    elif score >=0.90 and score <= 1.00:
-        return "HighlyLikely"
+    if score >= 0.0 and score < 0.20:
+        return "Very Low"
+    elif score >= 0.20 and score < 0.40:
+        return "Low"
+    elif score >= 0.40 and score < 0.60:
+        return "Moderate"
+    elif score >=0.60 and score <= 0.80:
+        return "High"
+    elif score >=0.80 and score <= 1.00:
+        return "Very High"
 
 
 ################# more code implementation ############################
