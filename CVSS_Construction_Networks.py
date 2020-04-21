@@ -13,6 +13,7 @@
 # general imports 
 import networkx as nx
 import pandas as pd
+import numpy
 
 class participant(object):
     #participant class with respective CVSS base metric attributes
@@ -118,7 +119,22 @@ def propogation(node1, node2):
     
     return None
 
-def getPathScore(allParticipants):
+def getPathScore_method3(pathScoreList):
+    # average method
+    # instead of taking worse value from ancestor node it takes avg
+    outputList = pathScoreList
+    num_edges = len(pathScoreList)
+    for i in range(num_edges-1):
+        
+        if (pathScoreList[i+1] < pathScoreList[i]):
+            outputList[i+1] = 0.5 * (pathScoreList[i+1] + pathScoreList[i])
+        else:
+            outputList[i+1] = pathScoreList[i+1] 
+    outputScore = (numpy.prod(outputList))/(10**num_edges)
+    #outputScore = round(outputScore,2)
+    return outputList, outputScore 
+
+def getPathScore_allMethods(allParticipants):
     # main function that does the following calculations
     # estimates all simple paths from all the nodes to the target node (input)
     # for each of the paths identified the vulnerability propogation is performed
@@ -128,9 +144,10 @@ def getPathScore(allParticipants):
     # higher the value, higher the probability and hence higher the chance of getting exploited
     # the path with maximum probability is chosen as the critical path for the network configuration
     
-    pathScore = 1 # initialize the value 
-    pathScore2 = 1 # for method 2 which is product of all node values
+    #pathScore1 = 1 # initialize the value 
+    #pathScore2 = 1 # for method 2 which is product of all node values
     output = [] # list of lists which has paths and resp path scores
+    pathll_list = []
     for sourceNode in allParticipants:
         #loop over all the nodes except the target node
         if (sourceNode == TargetNode):
@@ -140,16 +157,22 @@ def getPathScore(allParticipants):
             for path in nx.all_simple_paths(G,sourceNode,TargetNode):
                 # calculate simple paths from source node to target node
                 path_list = []
+                pathScoreList = []
                 # reset all participant scores to initial inputted values
                 resetToInitial(allParticipants_o,allParticipants)
-                pathScore2 = 1 # reset this to initial value for each path
+                # reset path score values for each of the methods
+                pathScore1 = 1
+                pathScore2 = 1 
+                pathScore3 = 1 
                 for eachNode in path:
                     #print(eachNode.participant_id)
                     path_list.append(eachNode.participant_id)
-                    pathScore2 = pathScore2* 0.1*getParticipantScore(eachNode)[-1]
+                    eachNodeScore = getParticipantScore(eachNode)[-1]
+                    pathScore2 = pathScore2* 0.1*eachNodeScore
+                    pathScoreList.append(eachNodeScore)
+                pathScore3 = getPathScore_method3(pathScoreList)[1]
                 #print("For the path: ", path_list)
-                pathScore = 1 #default value
-                pathScore = 0.1*pathScore*getParticipantScore(sourceNode)[-1] 
+                pathScore1 = 0.1*pathScore1*getParticipantScore(sourceNode)[-1] 
                 #print("EBS of Ancestor Node is: ", pathScore)
                 for i in range(len(path)-1):
                     #print("loop: ", i)
@@ -158,22 +181,25 @@ def getPathScore(allParticipants):
                     propogation(path[i],path[i+1])
                     #print("after spread")
                     #print(getParticipantScore(path[i+1])[-1])
-                    pathScore = 0.1*pathScore*getParticipantScore(path[i+1])[-1]
+                    pathScore1 = 0.1*pathScore1*getParticipantScore(path[i+1])[-1]
                     #print(path[i].participant_id)
                     #path[i].reset()
                     #print(pathScore)
                 path_ll = get_path_ll(path)
-                pathScore1 = round(pathScore,2)
+                pathll_list.append(path_ll)
+                pathScore1 = round(pathScore1,2)
                 pathScore2 = round(pathScore2,2)
-                
-                output.append([path_list,
-                               path_ll, get_path_ll_cat(path_ll),
-                               pathScore1, pathScore2
-                               #get_path_score_cat(pathScore1),
+                pathScore3 = round(pathScore3,2)
+                output.append([path_list, 
+                               pathScore1, pathScore2,pathScore3,
+                               get_path_score_cat(pathScore1),
+                               get_path_score_cat(pathScore2),
+                               get_path_score_cat(pathScore3),
+                               path_ll
                                ])
                 #index_max_score = pathScore_list.index(max(pathScore_list))
                 #critical_path = output[index_max_score]
-    return output
+    return output,pathll_list
 
         
 ################################### Inputs ####################################
@@ -296,9 +322,22 @@ def get_path_ll(path):
 # output the data in a data frame
 print("all paths and scores are: ")
 
-data = getPathScore(allParticipants)
+[data,pathll_list] = getPathScore_allMethods(allParticipants)
+for i in range(len(data)):
+    temp = (pathll_list[i] - min(pathll_list))/(max(pathll_list)-min(pathll_list))
+    data[i].append(temp)
+    data[i].append(get_path_ll_cat(temp))
+print(data)
+
 df = pd.DataFrame.from_records(data)
-print(df)
+
+df.columns = ['Possible Attack Paths','SS1','SS2','SS3',
+              'SS1 Category','SS2 Category','SS3 Category',
+              'Likelihood Score','Likelihood Score Scaled',
+              'Likelihood Category']
+df1 = df.sort_values('Likelihood Score Scaled', ascending = False)
+print(df1)
+df1.to_excel("results.xlsx") 
 
 #reset values because the last node will not get updated otherwise
 resetToInitial(allParticipants_o,allParticipants) 
