@@ -254,7 +254,7 @@ def get_path_score_cat(score):
         return "Low"
     elif score >= 0.40 and score < 0.60:
         return "Moderate"
-    elif score >=0.60 and score <= 0.80:
+    elif score >=0.60 and score < 0.80:
         return "High"
     elif score >=0.80 and score <= 1.00:
         return "Very High"
@@ -268,7 +268,7 @@ def get_path_ll_cat(score):
         return "Moderate"
     elif score >=0.60 and score <= 0.80:
         return "High"
-    elif score >=0.80 and score <= 1.00:
+    elif score >=0.80 and score < 1.00:
         return "Very High"
 
 
