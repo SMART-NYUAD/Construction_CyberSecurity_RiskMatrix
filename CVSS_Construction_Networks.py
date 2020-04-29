@@ -249,27 +249,27 @@ TargetNode = O
 
 def get_path_score_cat(score):
     if score >= 0.0 and score < 0.20:
-        return "Very Low"
+        return "VL"
     elif score >= 0.20 and score < 0.40:
-        return "Low"
+        return "L"
     elif score >= 0.40 and score < 0.60:
-        return "Moderate"
+        return "M"
     elif score >=0.60 and score < 0.80:
-        return "High"
+        return "H"
     elif score >=0.80 and score <= 1.00:
-        return "Very High"
+        return "VH"
 
 def get_path_ll_cat(score):
     if score >= 0.0 and score < 0.20:
-        return "Very Low"
+        return "VL"
     elif score >= 0.20 and score < 0.40:
-        return "Low"
+        return "L"
     elif score >= 0.40 and score < 0.60:
-        return "Moderate"
+        return "M"
     elif score >=0.60 and score <= 0.80:
-        return "High"
-    elif score >=0.80 and score < 1.00:
-        return "Very High"
+        return "H"
+    elif score >=0.80 and score <= 1.00:
+        return "VH"
 
 
 ################# more code implementation ############################
@@ -286,17 +286,17 @@ G.add_edges_from([
     (APM,PE)
 ])
 """
-l1 = 1.0/35.0 # 35 = 1 + 4 + 30
-l2 = 4.0/35.0
-l3 = 30.0/35.0
+l1 = 1.0/35.0 # 35 = 1 + 4 + 30 = l1+l2+l3
+l2 = 4.0/35.0 # 35 = 1 + 4 + 30 = l1+l2+l3
+l3 = 30.0/35.0 # 35 = 1 + 4 + 30 = l1+l2+l3
 
 G.add_edges_from([
     (O,APM,{'weight': l2}),(O,SI,{'weight': l2}),
     (F,APM,{'weight': l3}),(F,PE,{'weight': l1}),(F,SI,{'weight': l3}),
     (ME,SI,{'weight': l3}),(ME,PE,{'weight': l2}),
     (A,APM,{'weight': l2}),
-    (APM,PE,{'weight': l3})
-    #(O,A,{'weight': 4.0}),(O,F,{'weight': 4.0})
+    (APM,PE,{'weight': l3}),
+    (O,A,{'weight': l2}),(O,F,{'weight': l2})
 ])
     
 # =============================================================================
@@ -336,10 +336,8 @@ print(data)
 df = pd.DataFrame.from_records(data)
 
 df.columns = ['Possible Attack Paths','SS1','SS2','SS3',
-              'SS1 Category','SS2 Category','SS3 Category',
-              'Likelihood Score','Likelihood Score Scaled',
-              'Likelihood Category']
-df1 = df.sort_values('Likelihood Score Scaled', ascending = False)
+              'SS1','SS2','SS3','LS','NLSS','NLS']
+df1 = df.sort_values('NLSS', ascending = False)
 print(df1)
 df1.to_excel("results.xlsx") 
 
