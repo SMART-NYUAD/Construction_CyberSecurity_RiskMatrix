@@ -148,6 +148,9 @@ def getPathScore_allMethods(allParticipants):
     #pathScore2 = 1 # for method 2 which is product of all node values
     output = [] # list of lists which has paths and resp path scores
     pathll_list = []
+    SScC1_list = []
+    SScC2_list = []
+    SScC3_list = []
     for sourceNode in allParticipants:
         #loop over all the nodes except the target node
         if (sourceNode == TargetNode):
@@ -190,16 +193,22 @@ def getPathScore_allMethods(allParticipants):
                 pathScore1 = round(pathScore1,2)
                 pathScore2 = round(pathScore2,2)
                 pathScore3 = round(pathScore3,2)
+                SScC1 = get_path_score_cat(pathScore1)
+                SScC2 = get_path_score_cat(pathScore2)
+                SScC3 = get_path_score_cat(pathScore3)
+                SScC1_list.append(SScC1)
+                SScC2_list.append(SScC2)
+                SScC3_list.append(SScC3)
                 output.append([path_list, 
                                pathScore1, pathScore2,pathScore3,
-                               get_path_score_cat(pathScore1),
-                               get_path_score_cat(pathScore2),
-                               get_path_score_cat(pathScore3),
+                               SScC1,
+                               SScC2,
+                               SScC3,
                                path_ll
                                ])
                 #index_max_score = pathScore_list.index(max(pathScore_list))
                 #critical_path = output[index_max_score]
-    return output,pathll_list
+    return output,pathll_list,SScC1_list,SScC2_list,SScC3_list
 
         
 ################################### Inputs ####################################
@@ -223,7 +232,9 @@ metricScope = {'Unchanged':0.00,'Changed':1.00}
 O = participant('O','owner','Physical','High','High','Required','Low','Low','Low','Changed') #medium
 A = participant('A','Architect','Local','Low','Low','None','High','High','High','Changed') #high
 APM = participant('APM','AsstPM','Local','Low','Low','None','High','High','High','Changed') #high 
-SI = participant('SI','Superintendent','Local','Low','Low','None','High','High','High','Changed') #high
+#APM = participant('APM','AsstPM','Physical','High','High','Required','Low','Low','Low','Changed') #medium
+#SI = participant('SI','Superintendent','Local','Low','Low','None','High','High','High','Changed') #high
+SI = participant('SI','Superintendent','Physical','High','High','Required','Low','Low','Low','Changed') #medium
 PE = participant('PE','Project_Engineer','Local','Low','Low','None','High','High','High','Changed') #high
 ME = participant('ME','MEP_Engineer','Local','Low','Low','None','High','High','High','Changed') #high
 #F = participant('F','Foreman','Local','Low','Low','None','High','High','High','Changed') #high
@@ -236,10 +247,14 @@ allParticipants = [O,A,APM,SI,PE,ME,F]
 O_o = participant('O','owner','Physical','High','High','Required','Low','Low','Low','Changed') #medium
 A_o = participant('A','Architect','Local','Low','Low','None','High','High','High','Changed') #high
 APM_o = participant('APM','AsstPM','Local','Low','Low','None','High','High','High','Changed') #high 
-SI_o = participant('SI','Superintendent','Local','Low','Low','None','High','High','High','Changed') #high
+#APM_o = participant('APM','AsstPM','Physical','High','High','Required','Low','Low','Low','Changed') #medium
+#SI_o = participant('SI','Superintendent','Local','Low','Low','None','High','High','High','Changed') #high
+SI_o = participant('SI','Superintendent','Physical','High','High','Required','Low','Low','Low','Changed') #medium
 PE_o = participant('PE','Project_Engineer','Local','Low','Low','None','High','High','High','Changed') #high
 ME_o = participant('PE','MEP_Engineer','Local','Low','Low','None','High','High','High','Changed') #high
+#F_o = participant('F','Foreman','Local','Low','Low','None','High','High','High','Changed') #high
 F_o = participant('F','Foreman','Network','Low','Low','None','High','High','High','Changed') #critical
+
 
 allParticipants_o = [O_o,A_o,APM_o,SI_o,PE_o,ME_o,F_o]
 
@@ -271,6 +286,31 @@ def get_path_ll_cat(score):
     elif score >=0.80 and score <= 1.00:
         return "VH"
 
+def get_RC(SSc,LSc):
+    if SSc == 'VH':
+        return 'C'
+    elif SSc == 'H':
+        if LSc == 'VL' or LSc == 'L':
+            return 'M'
+        else:
+            return 'C'
+    elif SSc == 'M':
+        if LSc == 'VL':
+            return 'L'
+        elif LSc == 'L' or LSc == 'M':
+            return 'M'
+        else:
+            return 'C'
+    elif SSc == 'L':
+        if LSc == 'VL' or LSc == 'L':
+            return 'L'
+        else:
+            return 'M'
+    elif SSc == 'VL':
+        if LSc == 'VH':
+            return 'M'
+        else:
+            return 'L'
 
 ################# more code implementation ############################
 
@@ -295,8 +335,8 @@ G.add_edges_from([
     (F,APM,{'weight': l3}),(F,PE,{'weight': l1}),(F,SI,{'weight': l3}),
     (ME,SI,{'weight': l3}),(ME,PE,{'weight': l2}),
     (A,APM,{'weight': l2}),
-    (APM,PE,{'weight': l3}),
-    (O,A,{'weight': l2}),(O,F,{'weight': l2})
+    (APM,PE,{'weight': l3})
+    #(O,A,{'weight': l2}),(O,F,{'weight': l2})
 ])
     
 # =============================================================================
@@ -326,18 +366,26 @@ def get_path_ll(path):
 # output the data in a data frame
 print("all paths and scores are: ")
 
-[data,pathll_list] = getPathScore_allMethods(allParticipants)
+[data,pathll_list,SScC1_list,SScC2_list,SScC3_list] = getPathScore_allMethods(allParticipants)
+print(SScC1_list)
 for i in range(len(data)):
     temp = (pathll_list[i] - min(pathll_list))/(max(pathll_list)-min(pathll_list))
+    NLScC = get_path_ll_cat(temp)
     data[i].append(temp)
-    data[i].append(get_path_ll_cat(temp))
+    data[i].append(NLScC)
+    RC1 = get_RC(SScC1_list[i],NLScC)
+    RC2 = get_RC(SScC2_list[i],NLScC)
+    RC3 = get_RC(SScC3_list[i],NLScC)
+    data[i].append(RC1)
+    data[i].append(RC2)
+    data[i].append(RC3)
 print(data)
 
 df = pd.DataFrame.from_records(data)
 
-df.columns = ['Possible Attack Paths','SS1','SS2','SS3',
-              'SS1','SS2','SS3','LS','NLSS','NLS']
-df1 = df.sort_values('NLSS', ascending = False)
+df.columns = ['Possible Path','SSc1','SSc2','SSc3',
+              'SSc1','SSc2','SSc3','LSc','NLSc','NLScC','RC1','RC2','RC3']
+df1 = df.sort_values('NLSc', ascending = False)
 print(df1)
 df1.to_excel("results.xlsx") 
 
